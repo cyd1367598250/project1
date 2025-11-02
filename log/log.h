@@ -7,7 +7,8 @@
 #include <unistd.h> 
 #include <pthread.h>
 
-static FILE *g_fp = NULL;
+static FILE *ser_log = NULL;
+static FILE *sen_log = NULL;
 static struct timeval g_start;
 static pthread_mutex_t g_mtx = PTHREAD_MUTEX_INITIALIZER;
 typedef struct{
@@ -15,3 +16,4 @@ typedef struct{
 }LogFile;
 
 int initlog(const char* name);
+int writelog(const char* buf,size_t n);
