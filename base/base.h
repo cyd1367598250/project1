@@ -20,7 +20,7 @@ int max_win;
 
 void sys_err(const char str);
 int initserver(struct sockaddr_in *sev_addr);
-
+int sendwin(const char *buf,size_t n);
 bool isreclost();
 bool isconnected(int sockfd,struct sockaddr_in * cli_addr,socklen_t *cli_len);
 int dealwith(const char *buf,size_t n);

@@ -1,0 +1,25 @@
+cat > .gitignore <<'EOF'
+# build artifacts
+*.o
+*.a
+*.so
+*.out
+a.out
+/build/
+/cmake-build-*/
+
+# logs
+*.log
+sender_log.txt
+receiver_log.txt
+
+# tarballs / third-party
+*.tar
+*.tar.gz
+*.zip
+libevent-*
+
+# editor
+.vscode/
+.DS_Store
+EOF

@@ -59,7 +59,6 @@ bool sendack(int fd,const char* buf,struct sockaddr_in * cli_addr,ssize_t n,int 
 
 bool isconnected(int sockfd,struct sockaddr_in * cli_addr,socklen_t *cli_len)
 {
-    
     while(true){
         char buf[BUFSIZ];
         *cli_len = sizeof(*cli_addr);
@@ -69,6 +68,7 @@ bool isconnected(int sockfd,struct sockaddr_in * cli_addr,socklen_t *cli_len)
         int status=checkbuf(buf,n);
         if (status==3)
         {
+            sendwin(buf,n);
             if(sendack(sockfd,buf,cli_addr,n,1,false))
             return true;
         }

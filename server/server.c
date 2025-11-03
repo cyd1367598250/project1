@@ -4,7 +4,7 @@ int main(int argv,char* argc[])
 {
     recport=atoi(argc[1]);
     senport=atoi(argc[2]);
-    *rec_file_name=argc[3];
+    rec_file_name=argc[3];
     max_win=atoi(argc[4]);
 
 
@@ -19,9 +19,9 @@ int main(int argv,char* argc[])
     socklen_t cli_len=sizeof(cli_addr);
 
     int fd=initserver(&ser_addr);
-    int ret=createlog();
+    int ret=initlog(rec_file_name );
     if (ret!=1)
-    sys_err("log created failed!");
+    sys_err("receiver_log created failed!");
     if(isconnected(fd,&cli_addr,&cli_len))
     {
         work(fd);
