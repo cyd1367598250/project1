@@ -1,5 +1,24 @@
 #include "seg.h"
 
+void setexpected(const char*buf,ssize_t n)
+{
+    uint16_t seq;
+    memcpy(&seq,buf,2);
+    seq = ntohs(seq);
+    expected_seq=seq;
+}
+
+bool isexpect(const char* buf,size_t n)
+{
+    uint16_t seq;
+    memcpy(&seq,buf,2);
+    seq = ntohs(seq);
+    if(seq==expected_seq)
+    return true;
+    return false;
+}
+
+
 uint16_t urp_checksum(const uint8_t *p, size_t len) {
     uint32_t sum = 0;
     while (len > 1) {
@@ -19,6 +38,7 @@ uint16_t urp_checksum(const uint8_t *p, size_t len) {
 
 int checkbuf(const char *buf,size_t n)
 {
+    
     uint8_t *p=(const uint8_t*)buf;
     if(n<URP_HEADER_LEN)
     return -1;
@@ -64,17 +84,11 @@ static uint16_t csum16(const uint8_t *buf, size_t len)
     return (uint16_t)(~sum); 
 }
 
-size_t formsendback(const char* buf,ssize_t n,int type,uint8_t *out)
+size_t formsendback(ssize_t n,int type,uint8_t *out)
 {
-    const uint8_t *p=(const uint8_t*) buf;
     uint16_t seq,flags,checksum;
-    memcpy(&seq,p,2);
-    memcpy(&flags,p+2,2);
-    memcpy(&checksum,p+4,2);
-
-    seq      = ntohs(seq);
-    flags    = ntohs(flags);
-    checksum = ntohs(checksum);
+    seq      = expected_seq;
+    
     if(n==6)
         seq+=1;
     else
@@ -96,5 +110,20 @@ size_t formsendback(const char* buf,ssize_t n,int type,uint8_t *out)
     checksum=csum16(out,6);
     checksum=htons(checksum);
     memcpy(out+4,&checksum,2);
+    memcpy(acknow,out,6);
     return 6;
+}
+
+void sendagain(int fd,struct sockaddr_in * cli_addr,socklen_t *cli_len)
+{
+    sendto(fd,acknow,sizeof(acknow),0,(struct sockaddr*)cli_addr,*cli_len);
+    writeserlog(acknow,sizeof(acknow),1,1,1);
+}
+
+uint16_t getseq(const char*buf)
+{
+    uint16_t seq;
+    memcmy(&seq,buf,2);
+    seq=ntohs(seq);
+    return seq;
 }

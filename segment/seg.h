@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "../log/log.h"
 
 typedef struct{
     uint16_t seqnum;
@@ -24,12 +25,17 @@ enum{
     URP_FIN = 0x004,
     URP_NULL= 0x000
 };
-
 #define URP_HEADER_LEN 6
 #define URP_MSS        1000
+uint32_t expected_seq;
+uint8_t acknow[URP_HEADER_LEN];
 
 uint16_t urp_checksum(const uint8_t *p, size_t len);
 int isbroken(const char *buf,size_t n);
 int checkbuf(const char *buf,size_t n);
-size_t formsendback(const char* buf,ssize_t n,int type,uint8_t *out);
+size_t formsendback(ssize_t n,int type,uint8_t *out);
 static uint16_t csum16(const uint8_t *buf, size_t len);
+void setexpected(const char*buf,ssize_t n);
+bool isexpect(const char* buf,size_t n);
+void sendagain(int fd,struct sockaddr_in * cli_addr,socklen_t *cli_len);
+uint16_t getseq(const char*buf);

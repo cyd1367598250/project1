@@ -6,6 +6,7 @@ void sys_err(const char str)
     exit(1);
 }
 
+
 int initserver(struct sockaddr_in *sev_addr)
 {
     int fd=socket(AF_INET,SOCK_DGRAM,0);
@@ -27,10 +28,15 @@ bool isreclost()
     return true;
 }
 
-bool sendack(int fd,const char* buf,struct sockaddr_in * cli_addr,ssize_t n,int type,bool isdata)
+int sendwin(const char *buf,size_t n)
+{
+
+}
+
+bool sendback(int fd,const char* buf,struct sockaddr_in * cli_addr,ssize_t n,int type,bool isdata)
 {   
     uint8_t pro[6];
-    size_t pron=formsendback(buf,n,type,pro);
+    size_t pron=formsendback(n,type,pro);
     if (isdata)
     {
         datasendback();
@@ -42,6 +48,7 @@ bool sendack(int fd,const char* buf,struct sockaddr_in * cli_addr,ssize_t n,int 
         ssize_t sendn=sendto(fd,pro,6,0,(struct sockaddr*)cli_addr,cli_addr_len);
         if(sendn>=0)
         {
+            writeserlog(buf,n,1,1,1);
             return true;
         }
         if (errno == EINTR) continue;                    // 被信号打断，重试
@@ -57,6 +64,7 @@ bool sendack(int fd,const char* buf,struct sockaddr_in * cli_addr,ssize_t n,int 
     }
 }
 
+
 bool isconnected(int sockfd,struct sockaddr_in * cli_addr,socklen_t *cli_len)
 {
     while(true){
@@ -68,12 +76,15 @@ bool isconnected(int sockfd,struct sockaddr_in * cli_addr,socklen_t *cli_len)
         int status=checkbuf(buf,n);
         if (status==3)
         {
-            sendwin(buf,n);
-            if(sendack(sockfd,buf,cli_addr,n,1,false))
+            
+            writeserlog(buf,n,0,1,1);
+            setexpected(buf,n);
+            if(sendback(sockfd,buf,cli_addr,n,1,false))
             return true;
         }
         else
         {
+            writeserlog(buf,n,0,3,1);
             printf("waiting ...");
             continue;
         }
@@ -81,10 +92,6 @@ bool isconnected(int sockfd,struct sockaddr_in * cli_addr,socklen_t *cli_len)
     }
 }
 
-int dealwith(const char *buf,size_t n)
-{
-
-}
 
 void work(int fd)
 {
@@ -99,6 +106,16 @@ void work(int fd)
             int n=recvfrom(fd,buf,sizeof(buf),0,(struct sockaddr*)&cli_addr,&cli_len);
             if(n<-1)
                 recverr();
+            if(!isexpect(buf,n))
+            {
+                int type=checkbuf(buf,n);
+                if(type==-2)
+                    writeserlog(buf,n,0,2,3);
+                writeserlog(buf,n,0,3,type);
+                sendagain(fd,&cli_addr,&cli_len);
+                continue;
+            }
+
             int which=checkbuf(buf,n);
             if (which==2)
             {
@@ -107,15 +124,19 @@ void work(int fd)
             }
             else if(which==3)
             {
-                workerr();
+                writeserlog(buf,n,1,2,1);
+                sendagain(fd,&cli_addr,&cli_len);
             }
             else if(which==1)
             {
-                dealwith(buf,n);
+                writeserlog(buf,n,1,1,3);
+                setexpected(buf,n);
+                sendback(fd,buf,(struct sockaddr *)&cli_addr,cli_len,1,false);
             }
             else
             {
-                workerr();
+                writeserlog(buf,n,1,2,1);
+                sendagain(fd,&cli_addr,&cli_len);
             }
             
             

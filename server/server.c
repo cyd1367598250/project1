@@ -7,6 +7,7 @@ int main(int argv,char* argc[])
     rec_file_name=argc[3];
     max_win=atoi(argc[4]);
 
+    int ret=createwin();
 
     struct sockaddr_in ser_addr;
     bzero(&ser_addr,sizeof(struct sockaddr_in));
@@ -19,7 +20,7 @@ int main(int argv,char* argc[])
     socklen_t cli_len=sizeof(cli_addr);
 
     int fd=initserver(&ser_addr);
-    int ret=initlog(rec_file_name );
+    ret=initlog(rec_file_name );
     if (ret!=1)
     sys_err("receiver_log created failed!");
     if(isconnected(fd,&cli_addr,&cli_len))
